@@ -14,7 +14,7 @@ public final class WideEvent extends WideEventGroup {
     private final int localId;
 
     public WideEvent(WideEventEmitter emitter0, JsonObject fields0, Map<String, WideEventGroup> groups0, Instant startTime0,
-            Instant endTime0, boolean hasError0, @Nullable Throwable error0)
+            Instant endTime0, @Nullable Throwable error0)
     {
         super(fields0, groups0, startTime0, endTime0, error0);
         this.emitter = emitter0;

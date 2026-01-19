@@ -22,11 +22,13 @@ public class FileSink implements WideEventSink, Closeable {
 
     @Override
     public void write(WideEvent wideEvent) {
-        try {
-            GsonSerializer.serializeWideEvent(wideEvent, out);
-            out.newLine();
-            out.flush();
-        } catch (JsonIOException | IOException ignored) {
+        synchronized (lock) {
+            try {
+                GsonSerializer.serializeWideEvent(wideEvent, out);
+                out.newLine();
+                out.flush();
+            } catch (JsonIOException | IOException ignored) {
+            }
         }
     }
 

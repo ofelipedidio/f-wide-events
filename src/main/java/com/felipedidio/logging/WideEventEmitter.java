@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public final class WideEventEmitter {
     private final String name;
@@ -20,7 +21,7 @@ public final class WideEventEmitter {
     private final WideEventFilterFunction filterFunction;
     private final List<WideEventSink> sinks;
 
-    private int nextLocalId;
+    private final AtomicInteger nextLocalId = new AtomicInteger(0);
 
     private final Random random = new Random();
 
@@ -31,7 +32,6 @@ public final class WideEventEmitter {
         this.sampleRate = sampleRate0;
         this.filterFunction = filterFunction0;
         this.sinks = sinks0;
-        this.nextLocalId = 0;
     }
 
     public String getName() {
@@ -66,8 +66,7 @@ public final class WideEventEmitter {
         if (outcome == WideEventOutcome.DISCARD) {
             return false;
         } else if (outcome == WideEventOutcome.SAMPLE) {
-            double rand = random.nextDouble();
-            return !(rand > sampleRate);
+            return random.nextDouble() <= sampleRate;
         } else {
             return true;
         }
@@ -78,7 +77,7 @@ public final class WideEventEmitter {
     }
 
     int getNextLocalId() {
-        return nextLocalId++;
+        return nextLocalId.getAndIncrement();
     }
 
     UUID getId() {

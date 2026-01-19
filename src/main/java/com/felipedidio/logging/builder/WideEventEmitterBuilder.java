@@ -7,6 +7,7 @@ import com.felipedidio.logging.sink.WideEventSink;
 import com.google.gson.JsonObject;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +50,7 @@ public class WideEventEmitterBuilder {
 
     public WideEventEmitterBuilder sampleRate(double sampleRate0) {
         if (sampleRate0 < 0.0d || sampleRate0 > 1.0d) {
-            throw new IllegalArgumentException("The sample rage must fall within (0.0, 1.0)");
+            throw new IllegalArgumentException("Sample rate must be between 0.0 and 1.0");
         }
         this.sampleRate = sampleRate0;
         return this;
@@ -62,9 +63,10 @@ public class WideEventEmitterBuilder {
 
     public WideEventEmitterBuilder addFileSink(Path pathToFile) {
         try {
-            FileSink defaultSink = new FileSink(pathToFile);
-            this.sinks.add(defaultSink);
-        } catch (IOException ignored) {
+            FileSink fileSink = new FileSink(pathToFile);
+            this.sinks.add(fileSink);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to create file sink at " + pathToFile, e);
         }
         return this;
     }

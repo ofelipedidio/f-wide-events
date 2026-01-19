@@ -26,9 +26,8 @@ public class AutoEmittableWideEventWriter extends WideEventWriter {
         Map<String, WideEventGroup> groups = this.getGroups();
         Instant startTime = this.getStartTime();
         Instant endTime = this.getEndTime();
-        boolean hasError = this.hasError();
         Throwable error = this.getError();
-        WideEvent wideEvent = new WideEvent(emitter, fields, groups, startTime, endTime, hasError, error);
+        WideEvent wideEvent = new WideEvent(emitter, fields, groups, startTime, endTime, error);
 
         // Emit wide event
         emitter.emit(wideEvent);
