@@ -1,0 +1,33 @@
+plugins {
+    id 'java-library'
+}
+
+group = 'com.felipedidio'
+
+repositories {
+    mavenCentral()
+}
+
+version = "1.0.0-SNAPSHOT"
+
+dependencies {
+    // Nullability annotations
+    compileOnly 'org.jetbrains:annotations:26.0.2'
+
+    // JSON serialization
+    implementation 'com.google.code.gson:gson:2.13.1'
+
+    // Testing
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(17) }
+    withJavadocJar()
+    withSourcesJar()
+}
+
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+
+test { useJUnitPlatform() }
