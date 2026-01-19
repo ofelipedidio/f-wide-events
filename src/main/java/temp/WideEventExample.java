@@ -112,11 +112,11 @@ public class WideEventExample {
     }
 
     private static void logResponse(WideEventWriter event, HttpResponse response) {
-        try (WideEventWriter responseGroup = event.group("response")) {
-            responseGroup.set("status_code", response.statusCode());
-            responseGroup.set("status_message", response.statusMessage());
-            responseGroup.set("body", response.content());
-        }
+        // Using callback-based group with fluent API
+        event.group("response", responseGroup -> responseGroup
+                .set("status_code", response.statusCode())
+                .set("status_message", response.statusMessage())
+                .set("body", response.content()));
     }
 
     private static HttpResponse respondSessionFail(HttpRequest request, WideEventWriter event) {
@@ -146,12 +146,12 @@ public class WideEventExample {
     }
 
     private static void logRequest(WideEventWriter event, HttpRequest request) {
-        try (WideEventWriter requestGroup = event.group("request")) {
-            requestGroup.set("method", request.method());
-            requestGroup.set("path", request.path());
-            requestGroup.set("http_version", request.httpVersion());
-            requestGroup.set("headers", gson.toJsonTree(request.headers()));
-            requestGroup.set("body", request.body());
-        }
+        // Using callback-based group with fluent API
+        event.group("request", requestGroup -> requestGroup
+                .set("method", request.method())
+                .set("path", request.path())
+                .set("http_version", request.httpVersion())
+                .set("headers", gson.toJsonTree(request.headers()))
+                .set("body", request.body()));
     }
 }

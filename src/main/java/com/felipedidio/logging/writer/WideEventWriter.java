@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class WideEventWriter implements AutoCloseable {
     private final JsonObject fields;
@@ -26,32 +27,45 @@ public class WideEventWriter implements AutoCloseable {
         this.startTime = Instant.now();
     }
 
-    public void set(String fieldName, String fieldValue) {
+    public WideEventWriter set(String fieldName, String fieldValue) {
         fields.addProperty(fieldName, fieldValue);
+        return this;
     }
 
-    public void set(String fieldName, Number fieldValue) {
+    public WideEventWriter set(String fieldName, Number fieldValue) {
         fields.addProperty(fieldName, fieldValue);
+        return this;
     }
 
-    public void set(String fieldName, Boolean fieldValue) {
+    public WideEventWriter set(String fieldName, Boolean fieldValue) {
         fields.addProperty(fieldName, fieldValue);
+        return this;
     }
 
-    public void set(String fieldName, Character fieldValue) {
+    public WideEventWriter set(String fieldName, Character fieldValue) {
         fields.addProperty(fieldName, fieldValue);
+        return this;
     }
 
-    public void set(String fieldName, JsonElement fieldValue) {
+    public WideEventWriter set(String fieldName, JsonElement fieldValue) {
         fields.add(fieldName, fieldValue);
+        return this;
     }
 
     public WideEventWriter group(String groupName) {
         return groups.computeIfAbsent(groupName, key -> new WideEventWriter());
     }
 
-    public void error(@NotNull Throwable error0) {
+    public WideEventWriter group(String groupName, Consumer<WideEventWriter> consumer) {
+        try (WideEventWriter group = group(groupName)) {
+            consumer.accept(group);
+        }
+        return this;
+    }
+
+    public WideEventWriter error(@NotNull Throwable error0) {
         this.error = error0;
+        return this;
     }
 
     @Override

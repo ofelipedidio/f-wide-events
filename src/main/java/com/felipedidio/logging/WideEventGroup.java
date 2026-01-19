@@ -90,6 +90,44 @@ public class WideEventGroup {
         return error != null;
     }
 
+    public @Nullable JsonElement getField(String path) {
+        String[] parts = path.split("\\.");
+        JsonElement current = fields;
+
+        for (String part : parts) {
+            if (current == null || !current.isJsonObject()) {
+                return null;
+            }
+            current = current.getAsJsonObject().get(part);
+        }
+
+        return current;
+    }
+
+    public @Nullable String getFieldAsString(String path) {
+        JsonElement element = getField(path);
+        if (element != null && element.isJsonPrimitive() && element.getAsJsonPrimitive().isString()) {
+            return element.getAsString();
+        }
+        return null;
+    }
+
+    public @Nullable Number getFieldAsNumber(String path) {
+        JsonElement element = getField(path);
+        if (element != null && element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber()) {
+            return element.getAsNumber();
+        }
+        return null;
+    }
+
+    public @Nullable Boolean getFieldAsBoolean(String path) {
+        JsonElement element = getField(path);
+        if (element != null && element.isJsonPrimitive() && element.getAsJsonPrimitive().isBoolean()) {
+            return element.getAsBoolean();
+        }
+        return null;
+    }
+
     private static @NotNull JsonArray getErrorCauses(@NotNull Throwable error) {
         JsonArray causes = new JsonArray();
         while (error != null) {

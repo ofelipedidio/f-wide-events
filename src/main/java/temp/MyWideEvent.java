@@ -3,8 +3,6 @@ package temp;
 import com.felipedidio.logging.WideEvent;
 import com.felipedidio.logging.WideEventEmitter;
 import com.felipedidio.logging.builder.WideEventOutcome;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 
 import java.nio.file.Path;
 import java.util.Objects;
@@ -42,16 +40,10 @@ public class MyWideEvent {
             return WideEventOutcome.KEEP;
         }
 
-        JsonObject fields = event.getFields();
-        JsonElement user = fields.get("user");
-        if (user != null && user.isJsonObject()) {
-            JsonElement subscription = user.getAsJsonObject().get("subscription");
-            if (subscription != null && subscription.isJsonPrimitive() && subscription.getAsJsonPrimitive().isString()) {
-                String userSubscription = subscription.getAsString();
-                if (Objects.equals(userSubscription, "premium")) {
-                    return WideEventOutcome.KEEP;
-                }
-            }
+        // Keep premium users using the new path-based field accessor
+        String subscription = event.getFieldAsString("user.subscription");
+        if (Objects.equals(subscription, "premium")) {
+            return WideEventOutcome.KEEP;
         }
 
         // Sample all the other events

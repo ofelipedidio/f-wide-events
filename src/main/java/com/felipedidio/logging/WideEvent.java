@@ -40,4 +40,9 @@ public final class WideEvent extends WideEventGroup {
     {
         return localId;
     }
+
+    public String getEventName()
+    {
+        return emitter.getName();
+    }
 }

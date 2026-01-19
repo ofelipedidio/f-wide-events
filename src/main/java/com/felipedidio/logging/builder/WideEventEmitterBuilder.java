@@ -76,6 +76,11 @@ public class WideEventEmitterBuilder {
         return this;
     }
 
+    public WideEventEmitterBuilder addSink(WideEventSink sink) {
+        this.sinks.add(sink);
+        return this;
+    }
+
     public WideEventEmitter build() {
         return new WideEventEmitter(name, parameters, sampleRate, filterFunction, sinks);
     }
