@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *     .build();
  *
  * // Write events using try-with-resources
- * try (var event = emitter.begin()) {
+ * try (var event = emitter.begin("request-123")) {
  *     event.set("method", "GET");
  *     event.set("path", "/api/users");
  *     event.set("status", 200);
@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * }</pre>
  *
  * <h2>Thread Safety</h2>
- * <p>This class is thread-safe. Multiple threads can call {@link #begin()} and {@link #emit(WideEvent)}
+ * <p>This class is thread-safe. Multiple threads can call {@link #begin(String)} and {@link #emit(WideEvent)}
  * concurrently. Event local IDs are assigned atomically.
  *
  * @see WideEventEmitterBuilder
@@ -78,7 +78,7 @@ public final class WideEventEmitter {
     /**
      * Returns the name of this emitter.
      *
-     * <p>The name is used as the {@code event_name} field in emitted events
+     * <p>The name is used as the {@code emitter} field in emitted events
      * and as the default log file name.
      *
      * @return the emitter name
@@ -107,16 +107,17 @@ public final class WideEventEmitter {
      * configured sinks (subject to filtering and sampling).
      *
      * <pre>{@code
-     * try (var event = emitter.begin()) {
+     * try (var event = emitter.begin("request-123")) {
      *     event.set("field", "value");
      *     event.group("nested", g -> g.set("inner", 123));
      * }
      * }</pre>
      *
+     * @param eventType the unique identifier for this event instance
      * @return a new event writer
      */
-    public WideEventWriter begin() {
-        return new AutoEmittableWideEventWriter(this);
+    public WideEventWriter begin(String eventType) {
+        return new AutoEmittableWideEventWriter(this, eventType);
     }
 
     /**
@@ -127,7 +128,7 @@ public final class WideEventEmitter {
      * sampled, or discarded.
      *
      * <p>This method is typically called automatically when closing
-     * a {@link WideEventWriter} obtained from {@link #begin()}.
+     * a {@link WideEventWriter} obtained from {@link #begin(String)}.
      *
      * @param wideEvent the completed event to emit
      */

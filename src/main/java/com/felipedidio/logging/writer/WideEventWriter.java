@@ -18,7 +18,7 @@ import java.util.function.Consumer;
  * and automatic event emission:
  *
  * <pre>{@code
- * try (var event = emitter.begin()) {
+ * try (var event = emitter.begin("event-123")) {
  *     event.set("field", "value");
  *     event.set("count", 42);
  *     event.group("nested", g -> g.set("inner", true));
@@ -42,7 +42,7 @@ import java.util.function.Consumer;
  * <p>Start time is captured when the writer is created. End time is captured when
  * {@link #close()} is called. Duration is calculated automatically.
  *
- * @see com.felipedidio.logging.WideEventEmitter#begin()
+ * @see com.felipedidio.logging.WideEventEmitter#begin(String)
  * @see WideEventGroup
  */
 public class WideEventWriter implements AutoCloseable {
@@ -193,7 +193,7 @@ public class WideEventWriter implements AutoCloseable {
     /**
      * Closes this writer and captures the end time.
      *
-     * <p>For writers obtained from {@link com.felipedidio.logging.WideEventEmitter#begin()},
+     * <p>For writers obtained from {@link com.felipedidio.logging.WideEventEmitter#begin(String)},
      * closing also triggers event emission to all configured sinks.
      */
     @Override

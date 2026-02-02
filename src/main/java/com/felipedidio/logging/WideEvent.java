@@ -19,6 +19,7 @@ import com.google.gson.JsonObject;
  *   <li>{@link #getId()} - A unique UUID for this event</li>
  *   <li>{@link #getLocalId()} - A sequential ID within the emitter (0, 1, 2, ...)</li>
  *   <li>{@link #getEventName()} - The name of the emitter that created this event</li>
+ *   <li>{@link #getEventType()} - The user-provided event identifier</li>
  * </ul>
  *
  * <h2>JSON Representation</h2>
@@ -32,7 +33,8 @@ import com.google.gson.JsonObject;
  *   "end_time": "2026-01-19T10:00:00.050Z",
  *   "duration_ms": 50,
  *   "error": false,
- *   "event_name": "http-requests",
+ *   "emitter": "http-requests",
+ *   "event_type": "request-123",
  *   "local_id": 0,
  *   "id": "550e8400-e29b-41d4-a716-446655440000"
  * }
@@ -43,6 +45,7 @@ import com.google.gson.JsonObject;
  */
 public final class WideEvent extends WideEventGroup {
     private final WideEventEmitter emitter;
+    private final String eventType;
     private final UUID id;
     private final int localId;
 
@@ -50,17 +53,19 @@ public final class WideEvent extends WideEventGroup {
      * Creates a new wide event with the specified data and emitter reference.
      *
      * @param emitter0 the emitter that created this event
+     * @param eventType0 the user-provided event identifier
      * @param fields0 the event fields
      * @param groups0 the nested groups
      * @param startTime0 the event start time
      * @param endTime0 the event end time
      * @param error0 the error, if any
      */
-    public WideEvent(WideEventEmitter emitter0, JsonObject fields0, Map<String, WideEventGroup> groups0, Instant startTime0,
+    public WideEvent(WideEventEmitter emitter0, String eventType0, JsonObject fields0, Map<String, WideEventGroup> groups0, Instant startTime0,
             Instant endTime0, @Nullable Throwable error0)
     {
         super(fields0, groups0, startTime0, endTime0, error0);
         this.emitter = emitter0;
+        this.eventType = eventType0;
         this.id = emitter0.getId();
         this.localId = emitter0.getNextLocalId();
     }
@@ -76,7 +81,8 @@ public final class WideEvent extends WideEventGroup {
     public JsonObject toJson()
     {
         JsonObject json = super.toJson();
-        json.addProperty("event_name", emitter.getName());
+        json.addProperty("emitter", emitter.getName());
+        json.addProperty("event_type", eventType);
         json.addProperty("local_id", localId);
         json.addProperty("id", id.toString());
         return json;
@@ -112,5 +118,15 @@ public final class WideEvent extends WideEventGroup {
     public String getEventName()
     {
         return emitter.getName();
+    }
+
+    /**
+     * Returns the user-provided event identifier.
+     *
+     * @return the event identifier
+     */
+    public String getEventType()
+    {
+        return eventType;
     }
 }

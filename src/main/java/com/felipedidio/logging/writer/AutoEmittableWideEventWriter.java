@@ -11,24 +11,27 @@ import com.google.gson.JsonObject;
 /**
  * A {@link WideEventWriter} that automatically emits the event when closed.
  *
- * <p>This class is returned by {@link WideEventEmitter#begin()} and ensures
+ * <p>This class is returned by {@link WideEventEmitter#begin(String)} and ensures
  * that events are automatically emitted to all configured sinks when the
  * writer is closed (typically via try-with-resources).
  *
  * @see WideEventWriter
- * @see WideEventEmitter#begin()
+ * @see WideEventEmitter#begin(String)
  */
 public class AutoEmittableWideEventWriter extends WideEventWriter {
     private final WideEventEmitter emitter;
+    private final String eventType;
 
     /**
      * Creates a new auto-emittable writer associated with the specified emitter.
      *
      * @param emitter the emitter that will receive the event when this writer is closed
+     * @param eventType the unique identifier for this event instance
      */
-    public AutoEmittableWideEventWriter(WideEventEmitter emitter)
+    public AutoEmittableWideEventWriter(WideEventEmitter emitter, String eventType)
     {
         this.emitter = emitter;
+        this.eventType = eventType;
     }
 
     @Override
@@ -42,7 +45,7 @@ public class AutoEmittableWideEventWriter extends WideEventWriter {
         Instant startTime = this.getStartTime();
         Instant endTime = this.getEndTime();
         Throwable error = this.getError();
-        WideEvent wideEvent = new WideEvent(emitter, fields, groups, startTime, endTime, error);
+        WideEvent wideEvent = new WideEvent(emitter, eventType, fields, groups, startTime, endTime, error);
 
         // Emit wide event
         emitter.emit(wideEvent);
