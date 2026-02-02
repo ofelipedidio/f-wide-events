@@ -8,9 +8,24 @@ import com.felipedidio.logging.WideEventEmitter;
 import com.felipedidio.logging.WideEventGroup;
 import com.google.gson.JsonObject;
 
+/**
+ * A {@link WideEventWriter} that automatically emits the event when closed.
+ *
+ * <p>This class is returned by {@link WideEventEmitter#begin()} and ensures
+ * that events are automatically emitted to all configured sinks when the
+ * writer is closed (typically via try-with-resources).
+ *
+ * @see WideEventWriter
+ * @see WideEventEmitter#begin()
+ */
 public class AutoEmittableWideEventWriter extends WideEventWriter {
     private final WideEventEmitter emitter;
 
+    /**
+     * Creates a new auto-emittable writer associated with the specified emitter.
+     *
+     * @param emitter the emitter that will receive the event when this writer is closed
+     */
     public AutoEmittableWideEventWriter(WideEventEmitter emitter)
     {
         this.emitter = emitter;

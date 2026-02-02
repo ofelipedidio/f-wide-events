@@ -14,6 +14,36 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * The main entry point for creating and emitting structured wide events.
+ *
+ * <p>A {@code WideEventEmitter} is typically created once and reused throughout the application
+ * lifetime. It manages event configuration, filtering, sampling, and output to configured sinks.
+ *
+ * <h2>Basic Usage</h2>
+ * <pre>{@code
+ * // Create an emitter (typically a static singleton)
+ * WideEventEmitter emitter = WideEventEmitter.builder("http-requests", Path.of("logs"))
+ *     .parameter("service", "my-api")
+ *     .sampleRate(1.0)
+ *     .build();
+ *
+ * // Write events using try-with-resources
+ * try (var event = emitter.begin()) {
+ *     event.set("method", "GET");
+ *     event.set("path", "/api/users");
+ *     event.set("status", 200);
+ * }
+ * }</pre>
+ *
+ * <h2>Thread Safety</h2>
+ * <p>This class is thread-safe. Multiple threads can call {@link #begin()} and {@link #emit(WideEvent)}
+ * concurrently. Event local IDs are assigned atomically.
+ *
+ * @see WideEventEmitterBuilder
+ * @see WideEventWriter
+ * @see WideEvent
+ */
 public final class WideEventEmitter {
     private final String name;
     private final JsonObject parameters;
@@ -25,6 +55,17 @@ public final class WideEventEmitter {
 
     private final Random random = new Random();
 
+    /**
+     * Creates a new wide event emitter with the specified configuration.
+     *
+     * <p>Use {@link #builder(String, Path)} for a more convenient way to create emitters.
+     *
+     * @param name0 the emitter name
+     * @param parameters0 the emitter parameters
+     * @param sampleRate0 the sample rate (0.0 to 1.0)
+     * @param filterFunction0 the filter function, or null for no filtering
+     * @param sinks0 the list of sinks to write events to
+     */
     public WideEventEmitter(String name0, JsonObject parameters0, double sampleRate0, WideEventFilterFunction filterFunction0,
                             List<WideEventSink> sinks0) {
         this.name = name0;
@@ -34,18 +75,62 @@ public final class WideEventEmitter {
         this.sinks = sinks0;
     }
 
+    /**
+     * Returns the name of this emitter.
+     *
+     * <p>The name is used as the {@code event_name} field in emitted events
+     * and as the default log file name.
+     *
+     * @return the emitter name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Returns the parameters configured for this emitter.
+     *
+     * <p>Parameters are metadata that can be accessed in filter functions
+     * to make filtering decisions based on emitter configuration.
+     *
+     * @return the parameters as a JSON object
+     */
     public JsonObject getParameters() {
         return parameters;
     }
 
+    /**
+     * Begins a new event and returns a writer for populating it.
+     *
+     * <p>The returned writer should be used within a try-with-resources block.
+     * When the writer is closed, the event is automatically emitted to all
+     * configured sinks (subject to filtering and sampling).
+     *
+     * <pre>{@code
+     * try (var event = emitter.begin()) {
+     *     event.set("field", "value");
+     *     event.group("nested", g -> g.set("inner", 123));
+     * }
+     * }</pre>
+     *
+     * @return a new event writer
+     */
     public WideEventWriter begin() {
         return new AutoEmittableWideEventWriter(this);
     }
 
+    /**
+     * Emits a completed event to all configured sinks.
+     *
+     * <p>The event is first passed through the filter function (if configured).
+     * Based on the filter outcome and sample rate, the event may be kept,
+     * sampled, or discarded.
+     *
+     * <p>This method is typically called automatically when closing
+     * a {@link WideEventWriter} obtained from {@link #begin()}.
+     *
+     * @param wideEvent the completed event to emit
+     */
     public void emit(WideEvent wideEvent) {
         boolean shouldStore = filterEvent(wideEvent);
         if (!shouldStore) {
@@ -72,6 +157,16 @@ public final class WideEventEmitter {
         }
     }
 
+    /**
+     * Creates a new builder for constructing a {@code WideEventEmitter}.
+     *
+     * <p>The builder automatically adds a file sink that writes to
+     * {@code {loggingDirectory}/{name}.log}.
+     *
+     * @param name0 the name for the emitter (used in event_name field and default log file)
+     * @param loggingDirectory the directory where log files will be written
+     * @return a new emitter builder
+     */
     public static WideEventEmitterBuilder builder(String name0, Path loggingDirectory) {
         return new WideEventEmitterBuilder(name0, loggingDirectory);
     }
