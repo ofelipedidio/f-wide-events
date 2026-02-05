@@ -76,7 +76,7 @@ public final class WideEventEmitter {
     /**
      * Returns the name of this emitter.
      *
-     * <p>The name is used as the {@code emitter} field in emitted events
+     * <p>The name is used as the {@code emitter_name} field in emitted events
      * and as the default log file name.
      *
      * @return the emitter name
@@ -162,7 +162,7 @@ public final class WideEventEmitter {
      * <p>The builder automatically adds a file sink that writes to
      * {@code {loggingDirectory}/{name}.log}.
      *
-     * @param name0 the name for the emitter (used in event_name field and default log file)
+     * @param name0 the name for the emitter (used in emitter_name field and default log file)
      * @param loggingDirectory the directory where log files will be written
      * @return a new emitter builder
      */

@@ -159,7 +159,7 @@ Events are serialized to newline-delimited JSON:
   "end_time": "2026-01-19T10:00:00.050Z",
   "duration_ms": 50,
   "error": false,
-  "event_name": "http-requests",
+  "emitter_name": "http-requests",
   "local_id": 0,
   "id": "550e8400-e29b-41d4-a716-446655440000"
 }
