@@ -46,13 +46,15 @@ import java.util.function.Consumer;
  * @see WideEventGroup
  */
 public class WideEventWriter implements AutoCloseable {
+    private final Object lock = new Object();
+
     private final JsonObject fields;
     private final Map<String, WideEventWriter> groups;
 
     private final Instant startTime;
-    private Instant endTime;
+    private volatile Instant endTime;
 
-    private @Nullable Throwable error;
+    private volatile @Nullable Throwable error;
 
     /**
      * Creates a new event writer with the current time as the start time.
@@ -72,7 +74,9 @@ public class WideEventWriter implements AutoCloseable {
      * @return this writer for method chaining
      */
     public WideEventWriter set(String fieldName, String fieldValue) {
-        fields.addProperty(fieldName, fieldValue);
+        synchronized (lock) {
+            fields.addProperty(fieldName, fieldValue);
+        }
         return this;
     }
 
@@ -84,7 +88,9 @@ public class WideEventWriter implements AutoCloseable {
      * @return this writer for method chaining
      */
     public WideEventWriter set(String fieldName, Number fieldValue) {
-        fields.addProperty(fieldName, fieldValue);
+        synchronized (lock) {
+            fields.addProperty(fieldName, fieldValue);
+        }
         return this;
     }
 
@@ -96,7 +102,9 @@ public class WideEventWriter implements AutoCloseable {
      * @return this writer for method chaining
      */
     public WideEventWriter set(String fieldName, Boolean fieldValue) {
-        fields.addProperty(fieldName, fieldValue);
+        synchronized (lock) {
+            fields.addProperty(fieldName, fieldValue);
+        }
         return this;
     }
 
@@ -108,7 +116,9 @@ public class WideEventWriter implements AutoCloseable {
      * @return this writer for method chaining
      */
     public WideEventWriter set(String fieldName, Character fieldValue) {
-        fields.addProperty(fieldName, fieldValue);
+        synchronized (lock) {
+            fields.addProperty(fieldName, fieldValue);
+        }
         return this;
     }
 
@@ -122,7 +132,9 @@ public class WideEventWriter implements AutoCloseable {
      * @return this writer for method chaining
      */
     public WideEventWriter set(String fieldName, JsonElement fieldValue) {
-        fields.add(fieldName, fieldValue);
+        synchronized (lock) {
+            fields.add(fieldName, fieldValue);
+        }
         return this;
     }
 
@@ -147,7 +159,9 @@ public class WideEventWriter implements AutoCloseable {
      * @see #group(String, Consumer)
      */
     public WideEventWriter group(String groupName) {
-        return groups.computeIfAbsent(groupName, key -> new WideEventWriter());
+        synchronized (lock) {
+            return groups.computeIfAbsent(groupName, key -> new WideEventWriter());
+        }
     }
 
     /**
@@ -207,7 +221,9 @@ public class WideEventWriter implements AutoCloseable {
      * @return the fields as a JSON object
      */
     public @NotNull JsonObject getFields() {
-        return fields;
+        synchronized (lock) {
+            return fields.deepCopy();
+        }
     }
 
     /**
@@ -216,14 +232,16 @@ public class WideEventWriter implements AutoCloseable {
      * @return a map of group names to their completed groups
      */
     public Map<String, WideEventGroup> getGroups() {
-        Map<String, WideEventGroup> finalGroups = new HashMap<>();
-        for (var entry : groups.entrySet()) {
-            String key = entry.getKey();
-            WideEventWriter value = entry.getValue();
-            WideEventGroup group = value.toWideEventGroup();
-            finalGroups.put(key, group);
+        synchronized (lock) {
+            Map<String, WideEventGroup> finalGroups = new HashMap<>();
+            for (var entry : groups.entrySet()) {
+                String key = entry.getKey();
+                WideEventWriter value = entry.getValue();
+                WideEventGroup group = value.toWideEventGroup();
+                finalGroups.put(key, group);
+            }
+            return finalGroups;
         }
-        return finalGroups;
     }
 
     /**
@@ -264,6 +282,12 @@ public class WideEventWriter implements AutoCloseable {
 
     private @NotNull WideEventGroup toWideEventGroup() {
         Map<String, WideEventGroup> groups0 = this.getGroups();
-        return new WideEventGroup(fields, groups0, startTime, endTime, error);
+        JsonObject fieldsCopy = getFields();
+        Instant endTime0 = this.endTime;
+        // Use current time if not yet closed
+        if (endTime0 == null) {
+            endTime0 = Instant.now();
+        }
+        return new WideEventGroup(fieldsCopy, groups0, startTime, endTime0, error);
     }
 }

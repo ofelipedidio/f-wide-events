@@ -10,7 +10,7 @@ import com.google.gson.JsonObject;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -52,8 +52,6 @@ public final class WideEventEmitter {
     private final List<WideEventSink> sinks;
 
     private final AtomicInteger nextLocalId = new AtomicInteger(0);
-
-    private final Random random = new Random();
 
     /**
      * Creates a new wide event emitter with the specified configuration.
@@ -152,7 +150,7 @@ public final class WideEventEmitter {
         if (outcome == WideEventOutcome.DISCARD) {
             return false;
         } else if (outcome == WideEventOutcome.SAMPLE) {
-            return random.nextDouble() <= sampleRate;
+            return ThreadLocalRandom.current().nextDouble() <= sampleRate;
         } else {
             return true;
         }
