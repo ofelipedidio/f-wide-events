@@ -61,6 +61,7 @@ public class WideEventGroup {
 
     private final @NotNull JsonObject fields;
     private final @NotNull Map<String, WideEventGroup> groups;
+    private final @NotNull Map<String, WideEventArray> arrays;
 
     private final @NotNull Instant startTime;
     private final @NotNull Instant endTime;
@@ -74,14 +75,17 @@ public class WideEventGroup {
      *
      * @param fields0 the fields for this group
      * @param groups0 the nested sub-groups
+     * @param arrays0 the nested arrays
      * @param startTime0 the start time
      * @param endTime0 the end time
      * @param error0 the error, if any
      */
-    public WideEventGroup(@NotNull JsonObject fields0, @NotNull Map<String, @NotNull WideEventGroup> groups0, @NotNull Instant startTime0,
+    public WideEventGroup(@NotNull JsonObject fields0, @NotNull Map<String, @NotNull WideEventGroup> groups0,
+                          @NotNull Map<String, @NotNull WideEventArray> arrays0, @NotNull Instant startTime0,
                           @NotNull Instant endTime0, @Nullable Throwable error0) {
         this.fields = fields0;
         this.groups = groups0;
+        this.arrays = arrays0;
         this.startTime = startTime0;
         this.endTime = endTime0;
         this.duration = Duration.between(startTime0, endTime0);
@@ -110,6 +114,13 @@ public class WideEventGroup {
             WideEventGroup group = groupEntry.getValue();
             JsonObject groupJson = group.toJson();
             json.add(groupName, groupJson);
+        }
+
+        for (var arrayEntry : arrays.entrySet()) {
+            String arrayName = arrayEntry.getKey();
+            WideEventArray array = arrayEntry.getValue();
+            JsonObject arrayJson = array.toJson();
+            json.add(arrayName, arrayJson);
         }
 
         json.addProperty("start_time", ISO_FORMATTER.format(startTime));
@@ -143,6 +154,15 @@ public class WideEventGroup {
      */
     public Map<String, WideEventGroup> getGroups() {
         return groups;
+    }
+
+    /**
+     * Returns the nested arrays.
+     *
+     * @return a map of array names to their array data
+     */
+    public Map<String, WideEventArray> getArrays() {
+        return arrays;
     }
 
     /**

@@ -56,14 +56,15 @@ public final class WideEvent extends WideEventGroup {
      * @param eventType0 the user-provided event identifier
      * @param fields0 the event fields
      * @param groups0 the nested groups
+     * @param arrays0 the nested arrays
      * @param startTime0 the event start time
      * @param endTime0 the event end time
      * @param error0 the error, if any
      */
-    public WideEvent(WideEventEmitter emitter0, String eventType0, JsonObject fields0, Map<String, WideEventGroup> groups0, Instant startTime0,
-            Instant endTime0, @Nullable Throwable error0)
+    public WideEvent(WideEventEmitter emitter0, String eventType0, JsonObject fields0, Map<String, WideEventGroup> groups0,
+            Map<String, WideEventArray> arrays0, Instant startTime0, Instant endTime0, @Nullable Throwable error0)
     {
-        super(fields0, groups0, startTime0, endTime0, error0);
+        super(fields0, groups0, arrays0, startTime0, endTime0, error0);
         this.emitter = emitter0;
         this.eventType = eventType0;
         this.id = emitter0.getId();

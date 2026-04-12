@@ -1,5 +1,6 @@
 package com.felipedidio.logging.writer;
 
+import com.felipedidio.logging.WideEventArray;
 import com.felipedidio.logging.WideEventGroup;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -50,6 +51,7 @@ public class WideEventWriter implements AutoCloseable {
 
     private final JsonObject fields;
     private final Map<String, WideEventWriter> groups;
+    private final Map<String, ArrayEventWriter> arrays;
 
     private final Instant startTime;
     private volatile Instant endTime;
@@ -62,6 +64,7 @@ public class WideEventWriter implements AutoCloseable {
     public WideEventWriter() {
         this.fields = new JsonObject();
         this.groups = new HashMap<>();
+        this.arrays = new HashMap<>();
 
         this.startTime = Instant.now();
     }
@@ -190,6 +193,32 @@ public class WideEventWriter implements AutoCloseable {
     }
 
     /**
+     * Creates or retrieves an array with the specified name.
+     *
+     * <p>If an array with this name already exists, it is returned.
+     * Otherwise, a new array is created.
+     *
+     * <p>Remember to close the array or use it within a try-with-resources block:
+     *
+     * <pre>{@code
+     * try (var items = event.array("items")) {
+     *     try (var item = items.item()) {
+     *         item.set("id", 1);
+     *     }
+     * }
+     * }</pre>
+     *
+     * @param arrayName the name for the array
+     * @return the array writer
+     * @see ArrayEventWriter
+     */
+    public ArrayEventWriter array(String arrayName) {
+        synchronized (lock) {
+            return arrays.computeIfAbsent(arrayName, key -> new ArrayEventWriter());
+        }
+    }
+
+    /**
      * Records an error on this event.
      *
      * <p>The full cause chain of the throwable is captured and serialized
@@ -245,6 +274,24 @@ public class WideEventWriter implements AutoCloseable {
     }
 
     /**
+     * Returns the arrays as immutable {@link WideEventArray} instances.
+     *
+     * @return a map of array names to their completed arrays
+     */
+    public Map<String, WideEventArray> getArrays() {
+        synchronized (lock) {
+            Map<String, WideEventArray> finalArrays = new HashMap<>();
+            for (var entry : arrays.entrySet()) {
+                String key = entry.getKey();
+                ArrayEventWriter value = entry.getValue();
+                WideEventArray array = value.toWideEventArray();
+                finalArrays.put(key, array);
+            }
+            return finalArrays;
+        }
+    }
+
+    /**
      * Returns the time when this writer was created.
      *
      * @return the start time
@@ -280,14 +327,15 @@ public class WideEventWriter implements AutoCloseable {
         return error;
     }
 
-    private @NotNull WideEventGroup toWideEventGroup() {
+    @NotNull WideEventGroup toWideEventGroup() {
         Map<String, WideEventGroup> groups0 = this.getGroups();
+        Map<String, WideEventArray> arrays0 = this.getArrays();
         JsonObject fieldsCopy = getFields();
         Instant endTime0 = this.endTime;
         // Use current time if not yet closed
         if (endTime0 == null) {
             endTime0 = Instant.now();
         }
-        return new WideEventGroup(fieldsCopy, groups0, startTime, endTime0, error);
+        return new WideEventGroup(fieldsCopy, groups0, arrays0, startTime, endTime0, error);
     }
 }
